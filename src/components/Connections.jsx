@@ -14,7 +14,6 @@ const Connections = () => {
       const res = await axios.get(BASE_URL + "/user/connections", {
         withCredentials: true,
       });
-      console.log(res.data.data);
       dispatch(addConnections(res.data.data));
     } catch (err) {
       //Handle Error case
@@ -35,11 +34,11 @@ const Connections = () => {
       <h1 className="text-bold text-3xl">Connections</h1>
 
       {connections.map((connections) => {
-        const { firstName, lastName, gender, photoUrl, age, about } =
+        const { _id, firstName, lastName, gender, photoUrl, age, about } =
           connections;
 
         return (
-          <div className="m-4 flex p-4 rounded-lg bg-base-300 w-1/2 mx-auto">
+          <div key={_id} className="m-4 flex p-4 rounded-lg bg-base-300 w-1/2 mx-auto">
             <div>
               <img alt="photo" className="w-25 h-25 rounded-full" src={photoUrl} />
             </div>
