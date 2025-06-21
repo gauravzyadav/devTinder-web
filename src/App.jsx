@@ -14,11 +14,12 @@ function App() {
       <BrowserRouter basename="/">
         <Routes>
           {/* Shared layout with NavBar & Footer */}
+          {/* <Route path="/" element={<Landing />} /> */}
           <Route path="/" element={<Body />}>
-            
-            <Route path="login" element={<Login />} />
-            <Route path="feed" element={<Feed />} />
-            <Route path="profile" element={<Profile />} />
+            <Route path="/" element={<Feed />} />
+            <Route path="/login" element={<Login />} />
+            {/* <Route path="/feed" element={<Feed />} /> */}
+            <Route path="/profile" element={<Profile />} />
           </Route>
         </Routes>
       </BrowserRouter>

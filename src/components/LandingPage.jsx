@@ -16,9 +16,9 @@ const LandingPage = () => {
         backgroundImage: "url('https://marjon-journalism.shorthandstories.com/tinder-how-they-keep-you-swiping/assets/SgbRM44jay/tinder-gradient-750x422.png')", // Replace with your actual image path or URL
       }}
     >
-      {/* <div className="absolute top-3 left-5 text-white text-4xl font-dev">
+      <div className="absolute top-3 left-5 text-white text-4xl font-dev">
         DevTinder
-      </div> */}
+      </div>
       
       <div className="absolute top-5 right-5">
         <button className="btn btn-primary" onClick={changeTo}>Login</button>
