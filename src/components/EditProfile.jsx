@@ -46,15 +46,25 @@ const EditProfile = ({ user }) => {
         setError("Unexpected response from server.");
       }
     } catch (err) {
-      console.error("PATCH request failed:", err);
-
-      // Safe error extraction
-      if (err.response?.data) {
-        setError(err.response.data.message || "An error occurred.");
+      //console.log("AXIOS ERROR:", err); // helpful during dev
+    
+      // If it's a Mongoose validation error
+      if (
+        err.response &&
+        err.response.data &&
+        typeof err.response.data === "string"
+      ) {
+        const msg = err.response.data;
+        const parts = msg.split(": ");
+        setError(parts[parts.length - 1]); // sets only "Age must be at least 18"
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
       } else {
-        setError("Network or CORS error. Check console.");
+        setError("An error occurred");
       }
     }
+    
+    
   };
 
   return (
@@ -104,6 +114,8 @@ const EditProfile = ({ user }) => {
                   </div>
                   <input
                     type="text"
+                    min={18}
+                    max={150}
                     value={age}
                     className="input input-bordered w-full max-w-xs"
                     onChange={(e) => setAge(e.target.value)}
@@ -118,12 +130,12 @@ const EditProfile = ({ user }) => {
                     value={gender}
                     onChange={(e) => setGender(e.target.value)}
                   >
-                    <option value="" disabled>
-                      Select gender
+                    <option disabled value="">
+                      Select Gender
                     </option>
-                    <option value="male">male</option>
-                    <option value="female">female</option>
-                    <option value="others">others</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="others">Other</option>
                   </select>
                 </label>
 
@@ -139,7 +151,6 @@ const EditProfile = ({ user }) => {
                     onChange={(e) => setAbout(e.target.value)}
                   ></textarea>
                 </label>
-                
               </div>
               <p className="text-red-500">{error}</p>
               <div className="card-actions justify-center m-2">
@@ -149,12 +160,11 @@ const EditProfile = ({ user }) => {
               </div>
             </div>
           </div>
-        </div >
-        
+        </div>
+
         <UserCard
           user={{ firstName, lastName, photoUrl, age, gender, about }}
         />
-        
       </div>
       {showToast && (
         <div className="toast toast-top toast-center">
