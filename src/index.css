@@ -1,5 +1,12 @@
 /* index.css or App.css */
 @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&display=swap');
+
+.font-merriweather {
+  font-family: 'Merriweather', serif;
+}
+
+
 
 @import "tailwindcss";
 @plugin "daisyui";
@@ -65,3 +72,5 @@
 .font-dev {
   font-family: 'Anton', sans-serif;
 }
+
+

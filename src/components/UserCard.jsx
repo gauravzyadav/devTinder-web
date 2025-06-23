@@ -17,33 +17,65 @@ const UserCard = ({ user, isPreview = false }) => {
   const dispatch = useDispatch()
   const [isLoading, setIsLoading] = useState(null)
 
-  // Your existing handleSendRequest function
+  // State for like glow effect only
+  const [showLikeGlow, setShowLikeGlow] = useState(false)
+
+  // Enhanced handleSendRequest function with 30-second glow
   const handleSendRequest = async (status, userId) => {
-    if (isPreview) return
+    if (isPreview || isLoading) return // Prevent multiple clicks
+
+    // Only show glow for like action
+    if (status === "interested") {
+      setShowLikeGlow(true)
+    }
 
     setIsLoading(status)
 
     try {
-      const res = await axios.post(BASE_URL + "/request/send/" + status + "/" + userId, {}, { withCredentials: true })
-      dispatch(removeUserFromFeed(userId))
+      // Make API call
+      await axios.post(BASE_URL + "/request/send/" + status + "/" + userId, {}, { withCredentials: true })
+
+      // For like action, keep glow for 30 seconds before removing card
+      if (status === "interested") {
+        setTimeout(() => {
+          dispatch(removeUserFromFeed(userId))
+          setIsLoading(null)
+          setShowLikeGlow(false)
+        }, 200) // 30 seconds delay
+      } else {
+        // For pass action, remove immediately
+        dispatch(removeUserFromFeed(userId))
+        setIsLoading(null)
+      }
     } catch (err) {
       console.error("Error sending request:", err)
-    } finally {
+      // Reset states on error so user can try again
       setIsLoading(null)
+      setShowLikeGlow(false)
     }
   }
 
   const fullName = `${firstName} ${lastName}`.trim()
   const displayInfo = age && gender ? `${age}, ${gender}` : age ? `${age}` : gender || ""
 
+  // Like glow class (only for like action)
+  const getLikeGlowClass = () => {
+    if (showLikeGlow) {
+      return "shadow-2xl shadow-pink-500/60 ring-4 ring-pink-400/40 scale-105"
+    }
+    return ""
+  }
+
   return (
-    <Card className="w-full max-w-[280px] mx-auto overflow-hidden transition-all duration-300 hover:shadow-lg border-0 shadow-md">
+    <Card
+      className={`w-full max-w-[280px] mx-auto overflow-hidden transition-all duration-300 border-0 shadow-md ${getLikeGlowClass()}`}
+    >
       {/* Very Compact Profile Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
         <img
           src={photoUrl || "/placeholder.svg?height=280&width=224"}
           alt={`${fullName}'s profile`}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          className="w-full h-full object-cover"
           onError={(e) => {
             e.target.src = "/placeholder.svg?height=280&width=224"
           }}
@@ -71,6 +103,11 @@ const UserCard = ({ user, isPreview = false }) => {
             </div>
           )}
         </div>
+
+        {/* Like glow overlay (only for like action) */}
+        {showLikeGlow && (
+          <div className="absolute inset-0 pointer-events-none transition-opacity duration-300 bg-gradient-to-t from-pink-500/20 via-transparent to-pink-500/10 animate-pulse" />
+        )}
       </div>
 
       {/* Very Compact Card Content */}
@@ -93,7 +130,7 @@ const UserCard = ({ user, isPreview = false }) => {
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors h-7 text-xs"
+              className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors h-7 text-xs cursor-pointer disabled:cursor-not-allowed"
               onClick={() => handleSendRequest("ignored", _id)}
               disabled={isLoading !== null}
             >
@@ -111,7 +148,9 @@ const UserCard = ({ user, isPreview = false }) => {
             </Button>
             <Button
               size="sm"
-              className="flex-1 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white border-0 transition-all duration-200 h-7 text-xs"
+              className={`flex-1 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white border-0 transition-all duration-300 h-7 text-xs cursor-pointer disabled:cursor-not-allowed ${
+                showLikeGlow ? "shadow-lg shadow-pink-500/50 scale-105 animate-pulse" : ""
+              }`}
               onClick={() => handleSendRequest("interested", _id)}
               disabled={isLoading !== null}
             >

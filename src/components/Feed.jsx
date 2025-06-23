@@ -1,38 +1,69 @@
-import axios from "axios";
-import React from "react";
-import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { BASE_URL } from "../utils/constants";
-import { addFeed } from "../utils/feedSlice";
-import UserCard from "./UserCard";
+"use client"
+
+import axios from "axios"
+import { useEffect } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { BASE_URL } from "../utils/constants"
+import { addFeed } from "../utils/feedSlice"
+import UserCard from "./UserCard"
+import { AlertCircle } from "lucide-react"
 
 export const Feed = () => {
-  const feed = useSelector((store) => store.feed);
-  const dispatch = useDispatch();
+  const feed = useSelector((store) => store.feed)
+  const dispatch = useDispatch()
 
   const getFeed = async () => {
-    if (feed) return;
     try {
       const res = await axios.get(BASE_URL + "/feed", {
         withCredentials: true,
-      });
-      dispatch(addFeed(res?.data?.data));
-    } catch {
-      //TODo: handle error
+      })
+      dispatch(addFeed(res?.data?.data))
+    } catch (err) {
+      console.error("Error fetching feed:", err)
+      // TODO: handle error properly
     }
-  };
+  }
 
   useEffect(() => {
-    getFeed();
-  }, []);
+    getFeed()
+  }, []) // This will run on every component mount
 
-  return (
-    feed && (
-      <div className="flex justify-center my-10">
-        <UserCard user={feed[0]} />
+  // Show loading state while feed is being fetched
+  if (!feed) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin mx-auto"></div>
+          <p className="text-gray-600">Loading profiles...</p>
+        </div>
       </div>
     )
-  );
-};
+  }
 
-export default Feed;
+  // Show empty state when no users available
+  if (feed.length <= 0) {
+    return (
+      <div className="flex flex-col justify-center items-center h-96 space-y-4 text-gray-600">
+        <AlertCircle className="w-12 h-12 text-red-400" />
+        <div className="text-center space-y-2">
+          <h1 className="text-2xl font-semibold">No new users found!</h1>
+          <p className="text-gray-500">Check back later for more profiles to discover.</p>
+          <button
+            onClick={getFeed}
+            className="cursor-pointer mt-4 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
+          >
+            Refresh Feed
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex justify-center my-30">
+      <UserCard user={feed[0]} />
+    </div>
+  )
+}
+
+export default Feed

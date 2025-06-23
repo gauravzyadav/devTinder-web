@@ -53,7 +53,7 @@ const Body = () => {
       <div className={isAuthPage ? "relative z-20" : ""}>
         <NavBar />
         <Outlet />
-        {!isAuthPage && <Footer />}
+       
       </div>
     </div>
   )

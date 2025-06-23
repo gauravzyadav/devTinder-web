@@ -37,7 +37,7 @@ const LandingPage = () => {
           {/* Single Get Started Button - Centered */}
           <button
             onClick={() => navigate("/signup")}
-            className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-4 px-8 rounded-full text-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[200px] mb-64"
+            className="bg-gradient-to-r cursor-pointer from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-4 px-8 rounded-full text-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[200px] mb-64"
           >
             Get Started
           </button>
