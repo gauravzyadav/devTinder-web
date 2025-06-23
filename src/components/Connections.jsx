@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addConnections } from "../utils/connectionSlice";
 import { BASE_URL } from "../utils/constants";
+import { Link } from "react-router-dom";
 
 const Connections = () => {
   const connections = useSelector((store) => store.connections);
@@ -16,7 +17,7 @@ const Connections = () => {
       });
       dispatch(addConnections(res.data.data));
     } catch (err) {
-      //Handle Error case
+      console.error(err);
     }
   };
 
@@ -38,15 +39,25 @@ const Connections = () => {
           connections;
 
         return (
-          <div key={_id} className="m-4 flex p-4 rounded-lg bg-base-300 w-1/2 mx-auto">
+          <div
+            key={_id}
+            className="m-4 flex p-4 rounded-lg bg-base-300 w-1/2 mx-auto"
+          >
             <div>
-              <img alt="photo" className="w-25 h-25 rounded-full" src={photoUrl} />
+              <img
+                alt="photo"
+                className="w-25 h-25 rounded-full"
+                src={photoUrl}
+              />
             </div>
             <div className="text-left mx-4">
               <h2 className="font-bold">{firstName + " " + lastName}</h2>
               {age && gender && <p>{age + "," + gender}</p>}
               <p>{about}</p>
             </div>
+            <Link to={"/chat/" + _id}>
+              <button className="btn btn-primary">Chat</button>
+            </Link>
           </div>
         );
       })}

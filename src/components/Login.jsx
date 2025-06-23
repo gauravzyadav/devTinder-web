@@ -1,21 +1,29 @@
-import { useState } from "react";
-import axios from "axios";
-import { useDispatch } from "react-redux";
-import { addUser } from "../utils/userSlice";
-import { useNavigate } from "react-router-dom";
-import { BASE_URL } from "../utils/constants";
+"use client"
+
+import { useState } from "react"
+import axios from "axios"
+import { useDispatch } from "react-redux"
+import { addUser } from "../utils/userSlice"
+import { useNavigate, useLocation } from "react-router-dom"
+import { BASE_URL } from "../utils/constants"
 
 const Login = () => {
-  const [emailId, setEmailId] = useState("");
-  const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [isLoginForm, setIsLoginForm] = useState(false);
-  const [error, setError] = useState("");
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const [emailId, setEmailId] = useState("")
+  const [password, setPassword] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  // Determine if we're on signup page based on route
+  const isSignupForm = location.pathname === "/signup"
 
   const handleLogin = async () => {
+    setError("")
+    setIsLoading(true)
     try {
       const res = await axios.post(
         BASE_URL + "/login",
@@ -23,20 +31,22 @@ const Login = () => {
           emailId,
           password,
         },
-        { withCredentials: true }
-      );
+        { withCredentials: true },
+      )
 
-      dispatch(addUser(res.data));
-      return navigate("/");
+      dispatch(addUser(res.data))
+      return navigate("/feed")
     } catch (err) {
-      setError(err?.response?.data || "Something went wrong");
+      setError(err?.response?.data || "Something went wrong")
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSignUp = async () => {
+    setError("")
+    setIsLoading(true)
     try {
-
-
       const res = await axios.post(
         BASE_URL + "/signup",
         {
@@ -45,91 +55,130 @@ const Login = () => {
           emailId,
           password,
         },
-        { withCredentials: true }
-      );
+        { withCredentials: true },
+      )
 
-      dispatch(addUser(res.data.data));
-      return navigate("/profile");
+      dispatch(addUser(res.data.data))
+      return navigate("/profile")
     } catch (err) {
-      setError(err?.response?.data || "Something went wrong");
+      setError(err?.response?.data || "Something went wrong")
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <div className="flex justify-center my-10">
-      <div className="card bg-base-300 w-96 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title justify-center">
-            {isLoginForm ? "Login" : "Sign Up"}
-          </h2>
-          <div>
-            {!isLoginForm && (
-              <>
-                {" "}
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">First Name:</span>
-                  </div>
+    <div className="min-h-screen flex items-center justify-center p-4 pt-20">
+      {/* Compact Login/Signup Card */}
+      <div className="w-full max-w-sm">
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6">
+          {/* Compact Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800 mb-1">DevTinder</h1>
+            <h2 className="text-lg font-semibold text-gray-700 mb-1">
+              {isSignupForm ? "Create Account" : "Welcome Back"}
+            </h2>
+            <p className="text-gray-600 text-xs">
+              {isSignupForm ? "Join us to find your perfect match" : "Sign in to continue"}
+            </p>
+          </div>
+
+          {/* Compact Form */}
+          <div className="space-y-3">
+            {/* Name Fields for Signup */}
+            {isSignupForm && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">First Name</label>
                   <input
                     type="text"
                     value={firstName}
-                    className="input input-bordered w-full max-w-xs"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors bg-white/80"
+                    placeholder="John"
                     onChange={(e) => setFirstName(e.target.value)}
                   />
-                </label>
-                <label className="form-control w-full max-w-xs my-2">
-                  <div className="label">
-                    <span className="label-text">Last Name:</span>
-                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Last Name</label>
                   <input
                     type="text"
                     value={lastName}
-                    className="input input-bordered w-full max-w-xs"
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors bg-white/80"
+                    placeholder="Doe"
                     onChange={(e) => setLastName(e.target.value)}
                   />
-                </label>{" "}
-              </>
+                </div>
+              </div>
             )}
 
-            <label className="form-control w-full max-w-xs my-2">
-              <div className="label">
-                <span className="label-text">Email ID:</span>
-              </div>
+            {/* Email Field */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Email Address</label>
               <input
-                type="text"
+                type="email"
                 value={emailId}
-                className="input input-bordered w-full max-w-xs"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors bg-white/80"
+                placeholder="john@example.com"
                 onChange={(e) => setEmailId(e.target.value)}
               />
-            </label>
-            <label className="form-control w-full max-w-xs my-2">
-              <div className="label">
-                <span className="label-text">Password</span>
-              </div>
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Password</label>
               <input
                 type="password"
                 value={password}
-                className="input input-bordered w-full max-w-xs"
+                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors bg-white/80"
+                placeholder="Enter your password"
                 onChange={(e) => setPassword(e.target.value)}
               />
-            </label>
-          </div>
-          <p className="text-red-500"> {error}</p>
-          <div className="card-actions justify-center m-2">
-            <button className="btn btn-primary" onClick={isLoginForm ? handleLogin : handleSignUp}>
-              {isLoginForm ? "Login" : "Sign Up"}
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs">{error}</div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              className="w-full bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              onClick={isSignupForm ? handleSignUp : handleLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  {isSignupForm ? "Creating account..." : "Signing in..."}
+                </div>
+              ) : (
+                <>{isSignupForm ? "Create Account" : "Sign In"}</>
+              )}
             </button>
+
+            {/* Toggle Form */}
+            <div className="text-center pt-2">
+              <button
+                type="button"
+                className="text-xs text-gray-600 hover:text-pink-600 transition-colors duration-200 font-medium"
+                onClick={() => {
+                  navigate(isSignupForm ? "/login" : "/signup")
+                  setError("")
+                }}
+              >
+                {isSignupForm ? "Already have an account? Login Here" : "New User? Signup Here"}
+              </button>
+            </div>
           </div>
-          <p className="m-auto cursor-pointer" onClick={() => setIsLoginForm((value) => !value)}>
-              {isLoginForm
-                ? "New User? Signup Here"
-                : "Existing User? Login Here"}
-            </p>
+        </div>
+
+        {/* Compact Footer */}
+        <div className="text-center mt-4 text-xs text-white/70">
+          By continuing, you agree to our Terms & Privacy Policy
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
-
+export default Login
