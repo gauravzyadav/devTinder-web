@@ -14,15 +14,27 @@ export const Feed = () => {
 
   const getFeed = async () => {
     try {
+      // 🔧 Get token from localStorage
+      const token = localStorage.getItem("authToken");
+      
       const res = await axios.get(BASE_URL + "/feed", {
-        withCredentials: true,
-      })
-      dispatch(addFeed(res?.data?.data))
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+        },
+        withCredentials: true, // Keep this for cookie fallback
+      });
+      
+      dispatch(addFeed(res?.data?.data));
     } catch (err) {
-      console.error("Error fetching feed:", err)
-      // TODO: handle error properly
+      // 🔧 Better error handling - handle 401 properly
+      if (err.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        navigate("/login"); // Make sure navigate is available
+      }
+      console.error("Error fetching feed:", err);
+      // TODO: You can add user-friendly error messages here
     }
-  }
+  };
 
   useEffect(() => {
     getFeed()

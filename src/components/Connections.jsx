@@ -21,21 +21,39 @@ const Connections = () => {
 
   const fetchConnections = async () => {
     try {
+      // 🔧 Get token from localStorage
+      const token = localStorage.getItem("authToken");
+      
       const res = await axios.get(BASE_URL + "/user/connections", {
-        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+        },
+        withCredentials: true, // Keep this for cookie fallback
       });
+      
       dispatch(addConnections(res.data.data));
     } catch (err) {
-      console.error(err);
+      // 🔧 Better error handling
+      if (err.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        navigate("/login"); // Make sure navigate is available
+      }
+      console.error("Error fetching connections:", err);
     }
   };
-
+  
   const fetchChatMessages = async (targetUserId) => {
     try {
+      // 🔧 Get token from localStorage
+      const token = localStorage.getItem("authToken");
+      
       const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
-        withCredentials: true,
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+        },
+        withCredentials: true, // Keep this for cookie fallback
       });
-
+  
       const chatMessages = chat?.data?.messages.map((msg) => {
         const { senderId, text } = msg;
         return {
@@ -46,11 +64,16 @@ const Connections = () => {
       });
       setMessages(chatMessages || []);
     } catch (err) {
-      console.error(err);
+      // 🔧 Better error handling
+      if (err.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        navigate("/login"); // Make sure navigate is available
+      }
+      console.error("Error fetching chat messages:", err);
       setMessages([]);
     }
   };
-
+  
   const handleChatClick = (connection) => {
     setSelectedUserId(connection._id);
     setSelectedUser(connection);

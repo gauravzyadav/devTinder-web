@@ -19,15 +19,31 @@ const NavBar = () => {
     location.pathname === "/login" ||
     location.pathname === "/signup";
 
-  const handleLogout = async () => {
-    try {
-      await axios.post(BASE_URL + "/logout", {}, { withCredentials: true });
-      dispatch(removeUser());
-      return navigate("/");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  };
+    const handleLogout = async () => {
+      try {
+        // 🔧 Get token from localStorage
+        const token = localStorage.getItem("authToken");
+        
+        await axios.post(BASE_URL + "/logout", {}, {
+          headers: {
+            Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+          },
+          withCredentials: true, // Keep this for cookie cleanup
+        });
+        
+        // 🔧 Clean up local storage
+        localStorage.removeItem("authToken");
+        
+        dispatch(removeUser());
+        return navigate("/");
+      } catch (err) {
+        // 🔧 Even if logout fails on server, clean up locally
+        console.error("Logout error:", err);
+        localStorage.removeItem("authToken");
+        dispatch(removeUser());
+        navigate("/");
+      }
+    };
 
   // Determine where DevTinder logo should link to
   const logoDestination = user ? "/feed" : "/";

@@ -11,28 +11,56 @@ const Request = () => {
   const dispatch = useDispatch()
   const [loading, setLoading] = useState(false)
 
-  const reviewRequest = async (status, _id) => {
-    try {
-      setLoading(true)
-      const res = await axios.post(BASE_URL + "/request/review/" + status + "/" + _id, {}, { withCredentials: true })
-      dispatch(removeRequest(_id))
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchRequests = async () => {
-    try {
-      const res = await axios.get(BASE_URL + "/user/requests/received", {
+ // ✅ UPDATED: Review connection requests (accept/reject)
+const reviewRequest = async (status, _id) => {
+  try {
+    setLoading(true);
+    const token = localStorage.getItem("authToken");
+    
+    const res = await axios.post(
+      BASE_URL + "/request/review/" + status + "/" + _id, 
+      {}, 
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         withCredentials: true,
-      })
-      dispatch(addRequests(res.data.data))
-    } catch (err) {
-      console.error(err)
+      }
+    );
+    
+    dispatch(removeRequest(_id));
+  } catch (err) {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("authToken");
+      navigate("/login");
     }
+    console.error("Error reviewing request:", err);
+  } finally {
+    setLoading(false);
   }
+};
+
+// ✅ UPDATED: Fetch pending requests
+const fetchRequests = async () => {
+  try {
+    const token = localStorage.getItem("authToken");
+    
+    const res = await axios.get(BASE_URL + "/user/requests/received", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      withCredentials: true,
+    });
+    
+    dispatch(addRequests(res.data.data));
+  } catch (err) {
+    if (err.response?.status === 401) {
+      localStorage.removeItem("authToken");
+      navigate("/login");
+    }
+    console.error("Error fetching requests:", err);
+  }
+};
 
   useEffect(() => {
     fetchRequests()

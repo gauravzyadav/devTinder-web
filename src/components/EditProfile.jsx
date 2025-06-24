@@ -87,24 +87,36 @@ const EditProfile = ({ user }) => {
     return new File([u8arr], filename, { type: mime })
   }
 
-  // Upload file to server (you'll need to implement this endpoint)
-  const uploadFileToServer = async (file) => {
-    const formData = new FormData()
-    formData.append("photo", file)
+  // 🔧 UPDATED: Upload file to server with Authorization header
+const uploadFileToServer = async (file) => {
+  const formData = new FormData()
+  formData.append("photo", file)
 
-    try {
-      const response = await axios.post(BASE_URL + "/upload/photo", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        withCredentials: true,
-      })
-      return response.data.photoUrl // Your backend returns { photoUrl: "cloudinary_url" }
-    } catch (error) {
-      console.error("Upload error:", error)
-      throw new Error("Failed to upload image")
+  try {
+    // 🔧 Get token from localStorage
+    const token = localStorage.getItem("authToken")
+
+    const response = await axios.post(BASE_URL + "/upload/photo", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+      },
+      withCredentials: true, // Keep this for cookie fallback
+    })
+    return response.data.photoUrl // Your backend returns { photoUrl: "cloudinary_url" }
+  } catch (error) {
+    console.error("Upload error:", error)
+    
+    // 🔧 Handle 401 errors (token expired/invalid)
+    if (error.response?.status === 401) {
+      localStorage.removeItem("authToken")
+      // Optional: redirect to login or show message
+      // window.location.href = "/login" // Uncomment if needed
     }
+    
+    throw new Error("Failed to upload image")
   }
+}
 
   // Handle file selection with validation and compression
   const handleFileSelect = async (e) => {
@@ -159,68 +171,86 @@ const EditProfile = ({ user }) => {
     return photoUrl || "/placeholder.svg"
   }
 
-  // Enhanced saveProfile function with proper file upload handling
-  const saveProfile = async () => {
-    setError("")
-    setIsLoading(true)
+ // 🔧 UPDATED: Enhanced saveProfile function with Authorization header
+const saveProfile = async () => {
+  setError("")
+  setIsLoading(true)
 
-    try {
-      let finalPhotoUrl = photoUrl
+  try {
+    let finalPhotoUrl = photoUrl
 
-      // Handle file upload properly
-      if (uploadMethod === "file" && selectedFile) {
-        try {
-          // Option 1: Upload file to your server
-          finalPhotoUrl = await uploadFileToServer(selectedFile)
+    // Handle file upload properly
+    if (uploadMethod === "file" && selectedFile) {
+      try {
+        // Option 1: Upload file to your server
+        finalPhotoUrl = await uploadFileToServer(selectedFile)
 
-          // Option 2: If you want to send base64 to backend, convert it properly
-          // Remove the data URL prefix and send just the base64 string
-          // const base64Data = previewUrl.split(',')[1]
-          // finalPhotoUrl = base64Data
-        } catch (uploadError) {
-          setError("Failed to upload image. Please try again.")
-          setIsLoading(false)
-          return
-        }
+        // Option 2: If you want to send base64 to backend, convert it properly
+        // Remove the data URL prefix and send just the base64 string
+        // const base64Data = previewUrl.split(',')[1]
+        // finalPhotoUrl = base64Data
+      } catch (uploadError) {
+        setError("Failed to upload image. Please try again.")
+        setIsLoading(false)
+        return
       }
-
-      const res = await axios.patch(
-        BASE_URL + "/profile/edit",
-        {
-          firstName,
-          lastName,
-          photoUrl: finalPhotoUrl,
-          age,
-          gender,
-          about,
-        },
-        {
-          withCredentials: true,
-        },
-      )
-
-      const updatedUser = res?.data?.data
-      if (updatedUser) {
-        dispatch(addUser(updatedUser))
-        setShowToast(true)
-        setTimeout(() => setShowToast(false), 3000)
-      } else {
-        setError("Unexpected response from server.")
-      }
-    } catch (err) {
-      if (err.response && err.response.data && typeof err.response.data === "string") {
-        const msg = err.response.data
-        const parts = msg.split(": ")
-        setError(parts[parts.length - 1])
-      } else if (err.response?.data?.message) {
-        setError(err.response.data.message)
-      } else {
-        setError("An error occurred while saving profile")
-      }
-    } finally {
-      setIsLoading(false)
     }
+
+    // 🔧 Get token from localStorage
+    const token = localStorage.getItem("authToken")
+
+    const res = await axios.patch(
+      BASE_URL + "/profile/edit",
+      {
+        firstName,
+        lastName,
+        photoUrl: finalPhotoUrl,
+        age,
+        gender,
+        about,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+        },
+        withCredentials: true, // Keep this for cookie fallback
+      },
+    )
+
+    const updatedUser = res?.data?.data
+    if (updatedUser) {
+      dispatch(addUser(updatedUser))
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 3000)
+    } else {
+      setError("Unexpected response from server.")
+    }
+  } catch (err) {
+    console.error("Save profile error:", err)
+
+    // 🔧 Handle 401 errors (token expired/invalid)
+    if (err.response?.status === 401) {
+      localStorage.removeItem("authToken")
+      setError("Session expired. Please login again.")
+      // Optional: redirect to login
+      // window.location.href = "/login"
+      return
+    }
+
+    // Enhanced error handling
+    if (err.response && err.response.data && typeof err.response.data === "string") {
+      const msg = err.response.data
+      const parts = msg.split(": ")
+      setError(parts[parts.length - 1])
+    } else if (err.response?.data?.message) {
+      setError(err.response.data.message)
+    } else {
+      setError("An error occurred while saving profile")
+    }
+  } finally {
+    setIsLoading(false)
   }
+}
 
   const previewUser = {
     firstName,

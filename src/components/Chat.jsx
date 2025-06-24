@@ -13,22 +13,38 @@ const Chat = () => {
   const userId = user?._id;
 
   const fetchChatMessages = async () => {
-    const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
-      withCredentials: true,
-    });
-
-    console.log(chat.data.messages);
-
-    const chatMessages = chat?.data?.messages.map((msg) => {
-      const { senderId, text } = msg;
-      return {
-        firstName: senderId?.firstName,
-        lastName: senderId?.lastName,
-        text,
-      };
-    });
-    setMessages(chatMessages);
+    try {
+      // 🔧 Get token from localStorage
+      const token = localStorage.getItem("authToken");
+      
+      const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
+        headers: {
+          Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+        },
+        withCredentials: true, // Keep this for cookie fallback
+      });
+  
+      console.log(chat.data.messages);
+  
+      const chatMessages = chat?.data?.messages.map((msg) => {
+        const { senderId, text } = msg;
+        return {
+          firstName: senderId?.firstName,
+          lastName: senderId?.lastName,
+          text,
+        };
+      });
+      setMessages(chatMessages);
+    } catch (err) {
+      // 🔧 Better error handling
+      if (err.response?.status === 401) {
+        localStorage.removeItem("authToken");
+        navigate("/login"); // Make sure navigate is available in this component
+      }
+      console.error("Error fetching chat messages:", err);
+    }
   };
+
   useEffect(() => {
     fetchChatMessages();
   }, []);

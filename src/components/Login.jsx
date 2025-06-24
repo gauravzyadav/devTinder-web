@@ -35,16 +35,23 @@ const Login = () => {
         },
         { withCredentials: true }
       );
-
-      dispatch(addUser(res.data));
+  
+      // 🔧 Store token in localStorage for cross-domain requests
+      if (res.data.token) {
+        localStorage.setItem("authToken", res.data.token);
+      }
+  
+      // 🔧 Updated: Backend now returns { user, token, message }
+      dispatch(addUser(res.data.user)); // Use res.data.user instead of res.data
       return navigate("/feed");
     } catch (err) {
-      setError(err?.response?.data || "Something went wrong");
+      // 🔧 Better error handling for JSON responses
+      setError(err?.response?.data?.message || err?.response?.data || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   const handleSignUp = async () => {
     setError("");
     setIsLoading(true);
@@ -59,11 +66,18 @@ const Login = () => {
         },
         { withCredentials: true }
       );
-
-      dispatch(addUser(res.data.data));
+  
+      // 🔧 Store token in localStorage for cross-domain requests
+      if (res.data.token) {
+        localStorage.setItem("authToken", res.data.token);
+      }
+  
+      // 🔧 Updated: Backend now returns { user, token, message }
+      dispatch(addUser(res.data.user)); // Use res.data.user instead of res.data.data
       return navigate("/profile");
     } catch (err) {
-      setError(err?.response?.data || "Something went wrong");
+      // 🔧 Better error handling for JSON responses
+      setError(err?.response?.data?.message || err?.response?.data || "Something went wrong");
     } finally {
       setIsLoading(false);
     }

@@ -20,7 +20,7 @@ const UserCard = ({ user, isPreview = false }) => {
   // State for like glow effect only
   const [showLikeGlow, setShowLikeGlow] = useState(false)
 
-  // Enhanced handleSendRequest function with 30-second glow
+  // 🔧 UPDATED: Enhanced handleSendRequest function with Authorization header
   const handleSendRequest = async (status, userId) => {
     if (isPreview || isLoading) return // Prevent multiple clicks
 
@@ -32,8 +32,20 @@ const UserCard = ({ user, isPreview = false }) => {
     setIsLoading(status)
 
     try {
-      // Make API call
-      await axios.post(BASE_URL + "/request/send/" + status + "/" + userId, {}, { withCredentials: true })
+      // 🔧 Get token from localStorage
+      const token = localStorage.getItem("authToken")
+
+      // Make API call with Authorization header
+      await axios.post(
+        BASE_URL + "/request/send/" + status + "/" + userId,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+          },
+          withCredentials: true, // Keep this for cookie fallback
+        },
+      )
 
       // For like action, keep glow for 30 seconds before removing card
       if (status === "interested") {
@@ -49,6 +61,14 @@ const UserCard = ({ user, isPreview = false }) => {
       }
     } catch (err) {
       console.error("Error sending request:", err)
+
+      // 🔧 Handle 401 errors (token expired/invalid)
+      if (err.response?.status === 401) {
+        localStorage.removeItem("authToken")
+        // You might want to redirect to login or show a message
+        // window.location.href = "/login" // Uncomment if needed
+      }
+
       // Reset states on error so user can try again
       setIsLoading(null)
       setShowLikeGlow(false)
