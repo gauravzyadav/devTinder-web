@@ -3,8 +3,19 @@ import { BASE_URL } from "./constants";
 
 export const createSocketConnection = () => {
   if (location.hostname === "localhost") {
-    return io(BASE_URL);
+    // Local development - connect to local backend
+    return io(BASE_URL, {
+      transports: ['websocket', 'polling'],
+      withCredentials: true
+    });
   } else {
-    return io("/", { path: "/api/socket.io" });
+    // 🔧 PRODUCTION - Connect to your deployed backend URL
+    return io("https://dev-tinder-backend-blue.vercel.app", { 
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
   }
 };
