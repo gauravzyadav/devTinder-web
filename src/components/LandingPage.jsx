@@ -25,7 +25,7 @@ const LandingPage = () => {
       </div>
 
       {/* Content Container - Moved Much Further Down */}
-      <div className="relative z-20 min-h-screen flex flex-col justify-center p-4 pt-64 pb-20">
+      <div className="relative z-20 min-h-screen flex flex-col justifay-center p-4 pt-64 pb-20">
         {/* Hero Section - Centered but Much Lower */}
         <div className="text-center w-full max-w-7xl mx-auto px-4">
           {/* Hero Title - Centered, No Subtitle */}
@@ -37,13 +37,13 @@ const LandingPage = () => {
           {/* Single Get Started Button - Centered */}
           <button
             onClick={() => navigate("/signup")}
-            className="bg-gradient-to-r cursor-pointer from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-4 px-8 rounded-full text-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[200px] mb-64"
+            className="bg-gradient-to-r cursor-pointer from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-4 px-8 rounded-full text-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 min-w-[200px] mb-29"
           >
             Get Started
           </button>
 
           {/* Features - Clean Layout Without Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 max-w-5xl mx-auto translate-x-4">
             <div className="text-center px-4">
               <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

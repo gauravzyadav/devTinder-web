@@ -272,7 +272,7 @@ const saveProfile = async () => {
                 <User className="h-4 w-4" />
                 Profile Information
               </CardTitle>
-              <CardDescription className="text-xs">Make changes to your profile here.</CardDescription>
+              
             </CardHeader>
             <CardContent className="space-y-4 pb-4">
               {/* Photo Upload Section */}

@@ -3,6 +3,7 @@
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../utils/constants";
 import { removeUser } from "../utils/userSlice";
 import { Home, MessageCircle, UserPlus, LogOut, Settings } from "lucide-react";
@@ -12,40 +13,48 @@ const NavBar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const dropdownRef = useRef(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  // Check if we're on transparent pages (landing, login, or signup)
   const isTransparentPage =
     location.pathname === "/" ||
     location.pathname === "/login" ||
     location.pathname === "/signup";
 
-    const handleLogout = async () => {
-      try {
-        // 🔧 Get token from localStorage
-        const token = localStorage.getItem("authToken");
-        
-        await axios.post(BASE_URL + "/logout", {}, {
-          headers: {
-            Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
-          },
-          withCredentials: true, // Keep this for cookie cleanup
-        });
-        
-        // 🔧 Clean up local storage
-        localStorage.removeItem("authToken");
-        
-        dispatch(removeUser());
-        return navigate("/");
-      } catch (err) {
-        // 🔧 Even if logout fails on server, clean up locally
-        console.error("Logout error:", err);
-        localStorage.removeItem("authToken");
-        dispatch(removeUser());
-        navigate("/");
-      }
-    };
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      await axios.post(BASE_URL + "/logout", {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        withCredentials: true,
+      });
+      localStorage.removeItem("authToken");
+      dispatch(removeUser());
+      return navigate("/");
+    } catch (err) {
+      console.error("Logout error:", err);
+      localStorage.removeItem("authToken");
+      dispatch(removeUser());
+      navigate("/");
+    }
+  };
 
-  // Determine where DevTinder logo should link to
+  const handleClickOutside = (event) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target)
+    ) {
+      setShowDropdown(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const logoDestination = user ? "/feed" : "/";
 
   return (
@@ -74,7 +83,6 @@ const NavBar = () => {
 
           {/* Right Section */}
           <div className="flex items-center space-x-4">
-            {/* Login Button for Non-Authenticated Users */}
             {!user && (
               <Link
                 to="/login"
@@ -89,10 +97,8 @@ const NavBar = () => {
               </Link>
             )}
 
-            {/* User Section for Authenticated Users */}
             {user && (
-              <div className="flex items-center space-x-3">
-                {/* Welcome Message */}
+              <div className="flex items-center space-x-3" ref={dropdownRef}>
                 <div
                   className={`hidden md:block text-lg tracking-wide ${
                     isTransparentPage ? "text-white/90" : "text-gray-600"
@@ -100,7 +106,7 @@ const NavBar = () => {
                 >
                   Welcome,{" "}
                   <span
-                    className={`font-merriweather font-semibold  ${
+                    className={`font-merriweather font-semibold ${
                       isTransparentPage ? "text-white" : "text-gray-800"
                     }`}
                   >
@@ -108,10 +114,11 @@ const NavBar = () => {
                   </span>
                 </div>
 
-                {/* User Dropdown */}
-                <div className="relative group">
+                {/* Image and Dropdown Toggle */}
+                <div className="relative">
                   <button
-                    className={`flex items-center space-x-2 p-2 rounded-full transition-all duration-300 hover:scale-105 ${
+                    onClick={() => setShowDropdown((prev) => !prev)}
+                    className={` cursor-pointer flex items-center space-x-2 p-2 rounded-full transition-all duration-300 hover:scale-105 ${
                       isTransparentPage
                         ? "hover:bg-white/10 backdrop-blur-sm"
                         : "hover:bg-pink-50 hover:shadow-md"
@@ -121,7 +128,8 @@ const NavBar = () => {
                       <img
                         alt="user photo"
                         src={
-                          user.photoUrl || "/placeholder.svg?height=40&width=40"
+                          user.photoUrl ||
+                          "/placeholder.svg?height=40&width=40"
                         }
                         className="w-12 h-12 rounded-full object-cover ring-2 ring-pink-200 hover:ring-pink-300 transition-all duration-300"
                       />
@@ -130,75 +138,73 @@ const NavBar = () => {
                   </button>
 
                   {/* Dropdown Menu */}
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-                    <div className="py-2">
-                      {/* User Info Header */}
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={
-                              user.photoUrl ||
-                              "/placeholder.svg?height=32&width=32"
-                            }
-                            alt="Profile"
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                          <div>
-                            <p className="text-sm font-semibold text-gray-800">
-                              {user.firstName} {user.lastName}
-                            </p>
+                  {showDropdown && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 transition-all duration-300">
+                      <div className="py-2">
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={
+                                user.photoUrl ||
+                                "/placeholder.svg?height=32&width=32"
+                              }
+                              alt="Profile"
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                            <div>
+                              <p className="text-sm font-semibold text-gray-800">
+                                {user.firstName} {user.lastName}
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Menu Items */}
-                      <div className="py-1">
-                        <Link
-                          to="/feed"
-                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
-                        >
-                          <Home className="w-4 h-4" />
-                          <span>Home</span>
-                        </Link>
+                        <div className="py-1">
+                          <Link
+                            to="/feed"
+                            className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
+                          >
+                            <Home className="w-4 h-4" />
+                            <span>Home</span>
+                          </Link>
 
-                        <Link
-                          to="/profile"
-                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
-                        >
-                          <Settings className="w-4 h-4" />
-                          <span>Edit Profile</span>
-                        </Link>
+                          <Link
+                            to="/profile"
+                            className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
+                          >
+                            <Settings className="w-4 h-4" />
+                            <span>Edit Profile</span>
+                          </Link>
 
-                        <Link
-                          to="/connections"
-                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                          <span>Messages</span>
-                        </Link>
+                          <Link
+                            to="/connections"
+                            className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>Messages</span>
+                          </Link>
 
-                        <Link
-                          to="/requests"
-                          className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
-                        >
-                          <UserPlus className="w-4 h-4" />
-                          <span>Connection Requests</span>
-                        </Link>
-                      </div>
+                          <Link
+                            to="/requests"
+                            className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
+                          >
+                            <UserPlus className="w-4 h-4" />
+                            <span>Connection Requests</span>
+                          </Link>
+                        </div>
 
-                      {/* Logout Section */}
-                      <div className="border-t border-gray-100 py-1">
-                        <button
-                          onClick={handleLogout}
-                          className="flex items-center cursor-pointer
-                          space-x-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
-                        >
-                          <LogOut className="w-4 h-4" />
-                          <span>Logout</span>
-                        </button>
+                        <div className="border-t border-gray-100 py-1">
+                          <button
+                            onClick={handleLogout}
+                            className="flex items-center cursor-pointer space-x-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
+                          >
+                            <LogOut className="w-4 h-4" />
+                            <span>Logout</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
