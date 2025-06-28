@@ -10,7 +10,7 @@ export const createSocketConnection = () => {
     });
   } else {
     // 🔧 PRODUCTION - Connect to your deployed backend URL
-    return io("https://dev-tinder-backend-blue.vercel.app", { 
+    return io("https://devtinder-backend-yhxb.onrender.com", { 
       transports: ['websocket', 'polling'],
       withCredentials: true,
       reconnection: true,
