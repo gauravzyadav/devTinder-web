@@ -1,7 +1,7 @@
-"use client"
 
 import { useNavigate } from "react-router-dom"
 import NavBar from "./NavBar"
+
 
 const LandingPage = () => {
   const navigate = useNavigate()
@@ -90,6 +90,7 @@ const LandingPage = () => {
           </div>
         </div>
       </div>
+  
     </div>
   )
 }

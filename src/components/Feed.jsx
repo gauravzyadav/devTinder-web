@@ -7,6 +7,9 @@ import { BASE_URL } from "../utils/constants"
 import { addFeed } from "../utils/feedSlice"
 import UserCard from "./UserCard"
 import { AlertCircle } from "lucide-react"
+import Footer from "./Footer"
+
+
 
 export const Feed = () => {
   const feed = useSelector((store) => store.feed)
@@ -55,25 +58,35 @@ export const Feed = () => {
   // Show empty state when no users available
   if (feed.length <= 0) {
     return (
-      <div className="flex flex-col justify-center items-center h-96 space-y-4 text-gray-600">
-        <AlertCircle className="w-12 h-12 text-red-400" />
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-semibold">No new users found!</h1>
-          <p className="text-gray-500">Check back later for more profiles to discover.</p>
-          <button
-            onClick={getFeed}
-            className="cursor-pointer mt-4 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
-          >
-            Refresh Feed
-          </button>
+      <div className="min-h-screen flex flex-col">
+        {/* Content grows to fill available space */}
+        <div className="flex flex-col justify-center items-center flex-grow space-y-4 text-gray-600">
+          <AlertCircle className="w-12 h-12 text-red-400" />
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl font-semibold">No new users found!</h1>
+            <p className="text-gray-500">Check back later for more profiles to discover.</p>
+            <button
+              onClick={getFeed}
+              className="cursor-pointer mt-4 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors"
+            >
+              Refresh Feed
+            </button>
+          </div>
         </div>
+  
+        {/* Footer always at bottom */}
+        <Footer />
       </div>
     )
   }
+  
 
   return (
-    <div className="flex justify-center my-30">
-      <UserCard user={feed[0]} />
+    <div className="min-h-screen flex flex-col"> {/* 🔧 Add flex container */}
+      <div className="flex flex-grow items-center justify-center mt-14"> {/* 🔧 Make content flex-1 */}
+        <UserCard user={feed[0]} />
+      </div>
+      <Footer /> {/* 🔧 Add Footer */}
     </div>
   )
 }
