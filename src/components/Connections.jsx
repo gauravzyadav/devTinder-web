@@ -1,127 +1,161 @@
-"use client";
 
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { addConnections } from "../utils/connectionSlice";
-import { BASE_URL } from "../utils/constants";
-import { createSocketConnection } from "../utils/socket";
+import axios from "axios"
+import { useEffect, useState, useRef } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import { useNavigate } from "react-router-dom"
+import { addConnections } from "../utils/connectionSlice"
+import { BASE_URL } from "../utils/constants"
+import { createSocketConnection } from "../utils/socket"
 
 const Connections = () => {
-  const connections = useSelector((store) => store.connections);
-  const user = useSelector((store) => store.user);
-  const dispatch = useDispatch();
+  const connections = useSelector((store) => store.connections)
+  const user = useSelector((store) => store.user)
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   // Chat state
-  const [selectedUserId, setSelectedUserId] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const userId = user?._id;
+  const [selectedUserId, setSelectedUserId] = useState(null)
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [messages, setMessages] = useState([])
+  const [newMessage, setNewMessage] = useState("")
+
+  const messagesEndRef = useRef(null)
+  const userId = user?._id
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "just now"
+
+    const messageDate = new Date(timestamp)
+    const now = new Date()
+    const diffInMinutes = Math.floor((now - messageDate) / (1000 * 60))
+
+    if (diffInMinutes < 1) return "just now"
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
+
+    return messageDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
 
   const fetchConnections = async () => {
     try {
-      // 🔧 Get token from localStorage
-      const token = localStorage.getItem("authToken");
-      
+      const token = localStorage.getItem("authToken")
       const res = await axios.get(BASE_URL + "/user/connections", {
         headers: {
-          Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+          Authorization: `Bearer ${token}`,
         },
-        withCredentials: true, // Keep this for cookie fallback
-      });
-      
-      dispatch(addConnections(res.data.data));
+        withCredentials: true,
+      })
+      dispatch(addConnections(res.data.data))
     } catch (err) {
-      // 🔧 Better error handling
       if (err.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        navigate("/login"); // Make sure navigate is available
+        localStorage.removeItem("authToken")
+        navigate("/login")
       }
-      console.error("Error fetching connections:", err);
+      console.error("Error fetching connections:", err)
     }
-  };
-  
+  }
+
   const fetchChatMessages = async (targetUserId) => {
     try {
-      // 🔧 Get token from localStorage
-      const token = localStorage.getItem("authToken");
-      
+      const token = localStorage.getItem("authToken")
       const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
         headers: {
-          Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
+          Authorization: `Bearer ${token}`,
         },
-        withCredentials: true, // Keep this for cookie fallback
-      });
-  
+        withCredentials: true,
+      })
+
       const chatMessages = chat?.data?.messages.map((msg) => {
-        const { senderId, text } = msg;
+        const { senderId, text, createdAt } = msg
         return {
           firstName: senderId?.firstName,
           lastName: senderId?.lastName,
           text,
-        };
-      });
-      setMessages(chatMessages || []);
+          timestamp: createdAt || new Date().toISOString(),
+        }
+      })
+
+      setMessages(chatMessages || [])
     } catch (err) {
-      // 🔧 Better error handling
       if (err.response?.status === 401) {
-        localStorage.removeItem("authToken");
-        navigate("/login"); // Make sure navigate is available
+        localStorage.removeItem("authToken")
+        navigate("/login")
       }
-      console.error("Error fetching chat messages:", err);
-      setMessages([]);
+      console.error("Error fetching chat messages:", err)
+      setMessages([])
     }
-  };
-  
+  }
+
   const handleChatClick = (connection) => {
-    setSelectedUserId(connection._id);
-    setSelectedUser(connection);
-    fetchChatMessages(connection._id);
-  };
+    setSelectedUserId(connection._id)
+    setSelectedUser(connection)
+    fetchChatMessages(connection._id)
+  }
 
   const sendMessage = () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim()) return
 
-    const socket = createSocketConnection();
+    const socket = createSocketConnection()
+
     socket.emit("sendMessage", {
       firstName: user.firstName,
       lastName: user.lastName,
       userId,
       targetUserId: selectedUserId,
       text: newMessage,
-    });
-    setNewMessage("");
-  };
+    })
+
+    setNewMessage("")
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   // Socket effect for real-time messaging
   useEffect(() => {
     if (!userId || !selectedUserId) {
-      return;
+      return
     }
 
-    const socket = createSocketConnection();
+    const socket = createSocketConnection()
+
     socket.emit("joinChat", {
       firstName: user.firstName,
       userId,
       targetUserId: selectedUserId,
-    });
+    })
 
     socket.on("messageReceived", ({ firstName, lastName, text }) => {
-      console.log(firstName + " :  " + text);
-      setMessages((messages) => [...messages, { firstName, lastName, text }]);
-    });
+      console.log("📨 Message received:", firstName + " : " + text)
+      setMessages((messages) => [
+        ...messages,
+        {
+          firstName,
+          lastName,
+          text,
+          timestamp: new Date().toISOString(),
+        },
+      ])
+    })
 
     return () => {
-      socket.disconnect();
-    };
-  }, [userId, selectedUserId]);
+      socket.off("messageReceived")
+    }
+  }, [userId, selectedUserId])
 
   useEffect(() => {
-    fetchConnections();
-  }, []);
+    fetchConnections()
+  }, [])
 
-  if (!connections) return;
+  if (!connections) return
 
   if (connections.length == 0)
     return (
@@ -132,26 +166,22 @@ const Connections = () => {
         </div>
         <div className="p-6">{/* Right side - blank for now */}</div>
       </div>
-    );
+    )
 
   return (
     <div className="min-h-screen grid grid-cols-[1fr_2fr] pt-20">
       {/* Left side - Connections (Narrower) */}
       <div className="border-r border-gray-300 p-4 overflow-y-auto">
-        <h1 className="text-black font-bold  text-2xl mb-6">Messages</h1>
+        <h1 className="text-black font-bold text-2xl mb-6">Messages</h1>
 
         <div className="space-y-3">
           {connections.map((connection) => {
-            const { _id, firstName, lastName, gender, photoUrl, age, about } =
-              connection;
-
+            const { _id, firstName, lastName, gender, photoUrl, age, about } = connection
             return (
               <div
                 key={_id}
                 className={`flex p-3 rounded-lg border border-gray-200 transition-colors ${
-                  selectedUserId === _id
-                    ? "bg-blue-50 border-blue-300"
-                    : "bg-base-300"
+                  selectedUserId === _id ? "bg-blue-50 border-blue-300" : "bg-base-300"
                 }`}
               >
                 <div className="flex-shrink-0">
@@ -162,28 +192,17 @@ const Connections = () => {
                   />
                 </div>
                 <div className="flex-1 mx-3 min-w-0">
-                  <h2 className="font-bold text-base truncate">
-                    {firstName + " " + lastName}
-                  </h2>
-                  {age && gender && (
-                    <p className="text-xs text-gray-600">
-                      {age + ", " + gender}
-                    </p>
-                  )}
-                  <p className="text-xs text-gray-700 mt-1 line-clamp-2">
-                    {about}
-                  </p>
+                  <h2 className="font-bold text-base truncate">{firstName + " " + lastName}</h2>
+                  {age && gender && <p className="text-xs text-gray-600">{age + ", " + gender}</p>}
+                  <p className="text-xs text-gray-700 mt-1 line-clamp-2">{about}</p>
                 </div>
                 <div className="flex-shrink-0 flex items-center">
-                  <button
-                    onClick={() => handleChatClick(connection)}
-                    className="btn btn-primary btn-xs"
-                  >
+                  <button onClick={() => handleChatClick(connection)} className="btn btn-primary btn-xs">
                     Chat
                   </button>
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       </div>
@@ -191,7 +210,6 @@ const Connections = () => {
       {/* Right side - Chat (Wider) */}
       <div className="p-6 bg-gray-50 flex flex-col">
         {selectedUser ? (
-          // Chat Interface in a Box
           <div className="bg-white rounded-lg shadow-lg border border-gray-200 h-full flex flex-col">
             {/* Chat Header */}
             <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-gray-50 rounded-t-lg">
@@ -201,17 +219,12 @@ const Connections = () => {
                 src={selectedUser.photoUrl || "/placeholder.svg"}
               />
               <div>
-                <h2 className="font-bold text-lg">
-                  {selectedUser.firstName + " " + selectedUser.lastName}
-                </h2>
+                <h2 className="font-bold text-lg">{selectedUser.firstName + " " + selectedUser.lastName}</h2>
               </div>
             </div>
 
             {/* Messages Area */}
-            <div
-              className="flex-1 overflow-y-auto p-4 space-y-3"
-              style={{ maxHeight: "calc(100vh - 300px)" }}
-            >
+            <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight: "calc(100vh - 300px)" }}>
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full text-gray-500">
                   <div className="text-center">
@@ -233,14 +246,9 @@ const Connections = () => {
                 </div>
               ) : (
                 messages.map((msg, index) => {
-                  const isCurrentUser = user.firstName === msg.firstName;
+                  const isCurrentUser = user.firstName === msg.firstName
                   return (
-                    <div
-                      key={index}
-                      className={`flex ${
-                        isCurrentUser ? "justify-end" : "justify-start"
-                      }`}
-                    >
+                    <div key={index} className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>
                       <div
                         className={`max-w-sm lg:max-w-md px-4 py-2 rounded-lg break-words ${
                           isCurrentUser
@@ -249,18 +257,20 @@ const Connections = () => {
                         }`}
                       >
                         <p className="text-sm">{msg.text}</p>
-                        <p
-                          className={`text-xs mt-1 ${
-                            isCurrentUser ? "text-blue-100" : "text-gray-500"
-                          }`}
-                        >
-                          {msg.firstName} {msg.lastName}
-                        </p>
+                        <div className="flex justify-between items-center mt-1">
+                          {/* <p className={`text-xs ${isCurrentUser ? "text-blue-100" : "text-gray-500"}`}>
+                            {msg.firstName} {msg.lastName}
+                          </p> */}
+                          <p className={`text-xs ${isCurrentUser ? "text-blue-100" : "text-gray-500"}`}>
+                            {formatTimestamp(msg.timestamp)}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  );
+                  )
                 })
               )}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Message Input */}
@@ -284,7 +294,6 @@ const Connections = () => {
             </div>
           </div>
         ) : (
-          // Empty State
           <div className="bg-white rounded-lg shadow-lg border border-gray-200 h-full flex items-center justify-center">
             <div className="text-center text-gray-400">
               <svg
@@ -301,15 +310,13 @@ const Connections = () => {
                 />
               </svg>
               <p className="text-lg">Select a connection to start chatting</p>
-              <p className="text-sm mt-2">
-                Choose someone from your connections to begin a conversation
-              </p>
+              <p className="text-sm mt-2">Choose someone from your connections to begin a conversation</p>
             </div>
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Connections;
+export default Connections
