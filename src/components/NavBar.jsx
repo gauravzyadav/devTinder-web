@@ -6,7 +6,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { BASE_URL } from "../utils/constants";
 import { removeUser } from "../utils/userSlice";
-import { Home, MessageCircle, UserPlus, LogOut, Settings } from "lucide-react";
+import { Home, MessageCircle, UserPlus, LogOut, Settings, User } from "lucide-react";
 
 const NavBar = () => {
   const user = useSelector((store) => store.user);
@@ -15,11 +15,6 @@ const NavBar = () => {
   const location = useLocation();
   const dropdownRef = useRef(null);
   const [showDropdown, setShowDropdown] = useState(false);
-
-  const isTransparentPage =
-    location.pathname === "/" ||
-    location.pathname === "/login" ||
-    location.pathname === "/signup";
 
   const handleLogout = async () => {
     try {
@@ -58,150 +53,109 @@ const NavBar = () => {
   const logoDestination = user ? "/feed" : "/";
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isTransparentPage
-          ? "bg-transparent"
-          : "bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm"
-      }`}
-    >
-      <div className="px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo Section */}
+    <nav className="relative z-50 bg-[#FFFDF5] border-b-4 border-black h-20 flex items-center">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center">
+          
+          {/* LOGO SECTION */}
           <div className="flex-shrink-0">
             <Link
               to={logoDestination}
-              className={`text-2xl md:text-4xl font-bold transition-all duration-300 hover:scale-105 ${
-                isTransparentPage
-                  ? "text-white drop-shadow-lg hover:drop-shadow-xl"
-                  : "text-transparent bg-gradient-to-r from-pink-500 via-rose-500 to-purple-500 bg-clip-text hover:from-pink-600 hover:via-rose-600 hover:to-purple-600"
-              }`}
+              className="text-3xl font-black tracking-tighter hover:text-pink-500 transition-colors flex items-center gap-1"
             >
-              DevTinder
+              <span className="bg-black text-white px-2 py-1 transform -rotate-3">DEV</span>
+              <span className="text-black">TINDER</span>
             </Link>
           </div>
 
-          {/* Right Section */}
+          {/* RIGHT SECTION */}
           <div className="flex items-center space-x-4">
+            
+            {/* NOT LOGGED IN: Show Login Button */}
             {!user && (
               <Link
                 to="/login"
-                className={`group relative overflow-hidden font-semibold py-2.5 px-6 rounded-full text-lg transition-all duration-300 transform hover:scale-105 ${
-                  isTransparentPage
-                    ? "bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white border border-white/30 hover:border-white/50 shadow-lg hover:shadow-xl"
-                    : "bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-lg hover:shadow-xl"
-                }`}
+                className="cursor-pointer font-bold py-2 px-6 bg-yellow-400 text-black border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               >
-                <span className="relative z-10 mx-2">Login</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-600 to-rose-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                LOGIN
               </Link>
             )}
 
+            {/* LOGGED IN: Show User Menu */}
             {user && (
-              <div className="flex items-center space-x-3" ref={dropdownRef}>
-                <div
-                  className={`hidden md:block text-lg tracking-wide ${
-                    isTransparentPage ? "text-white/90" : "text-gray-600"
-                  }`}
-                >
-                  Welcome,{" "}
-                  <span
-                    className={`font-merriweather font-semibold ${
-                      isTransparentPage ? "text-white" : "text-gray-800"
-                    }`}
-                  >
-                    {user.firstName}
-                  </span>
+              <div className="flex items-center space-x-4" ref={dropdownRef}>
+                <div className="hidden md:block font-bold text-lg">
+                  Welcome, <span className="bg-pink-500 text-white px-1">{user.firstName}</span>
                 </div>
 
-                {/* Image and Dropdown Toggle */}
+                {/* Avatar Button */}
                 <div className="relative">
                   <button
                     onClick={() => setShowDropdown((prev) => !prev)}
-                    className={` cursor-pointer flex items-center space-x-2 p-2 rounded-full transition-all duration-300 hover:scale-105 ${
-                      isTransparentPage
-                        ? "hover:bg-white/10 backdrop-blur-sm"
-                        : "hover:bg-pink-50 hover:shadow-md"
-                    }`}
+                    className="cursor-pointer flex items-center justify-center w-12 h-12 rounded-full border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all overflow-hidden bg-white"
                   >
-                    <div className="relative">
-                      <img
-                        alt="user photo"
-                        src={
-                          user.photoUrl ||
-                          "/placeholder.svg?height=40&width=40"
-                        }
-                        className="w-12 h-12 rounded-full object-cover ring-2 ring-pink-200 hover:ring-pink-300 transition-all duration-300"
-                      />
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
-                    </div>
+                    <img
+                      alt="user photo"
+                      src={user.photoUrl || "/placeholder.svg?height=40&width=40"}
+                      className="w-full h-full object-cover"
+                    />
                   </button>
 
                   {/* Dropdown Menu */}
                   {showDropdown && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 z-50 transition-all duration-300">
-                      <div className="py-2">
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <div className="flex items-center space-x-3">
-                            <img
-                              src={
-                                user.photoUrl ||
-                                "/placeholder.svg?height=32&width=32"
-                              }
-                              alt="Profile"
-                              className="w-8 h-8 rounded-full object-cover"
-                            />
-                            <div>
-                              <p className="text-sm font-semibold text-gray-800">
-                                {user.firstName} {user.lastName}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                    <div className="absolute right-0 mt-4 w-64 bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] z-50">
+                      {/* Header */}
+                      <div className="bg-yellow-400 p-4 border-b-4 border-black">
+                        <p className="font-black text-lg truncate">
+                          {user.firstName} {user.lastName}
+                        </p>
+                        <p className="text-xs font-mono font-bold">@developer</p>
+                      </div>
 
-                        <div className="py-1">
-                          <Link
-                            to="/feed"
-                            className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
-                          >
-                            <Home className="w-4 h-4" />
-                            <span>Home</span>
-                          </Link>
+                      {/* Links */}
+                      <div className="p-2 space-y-1">
+                        <Link
+                          to="/feed"
+                          className="flex items-center space-x-3 px-4 py-3 font-bold hover:bg-black hover:text-white transition-colors border-2 border-transparent hover:border-black"
+                        >
+                          <Home className="w-5 h-5" />
+                          <span>FEED</span>
+                        </Link>
 
-                          <Link
-                            to="/profile"
-                            className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
-                          >
-                            <Settings className="w-4 h-4" />
-                            <span>Edit Profile</span>
-                          </Link>
+                        <Link
+                          to="/profile"
+                          className="flex items-center space-x-3 px-4 py-3 font-bold hover:bg-black hover:text-white transition-colors border-2 border-transparent hover:border-black"
+                        >
+                          <Settings className="w-5 h-5" />
+                          <span>EDIT PROFILE</span>
+                        </Link>
 
-                          <Link
-                            to="/connections"
-                            className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            <span>Messages</span>
-                          </Link>
+                        <Link
+                          to="/connections"
+                          className="flex items-center space-x-3 px-4 py-3 font-bold hover:bg-black hover:text-white transition-colors border-2 border-transparent hover:border-black"
+                        >
+                          <MessageCircle className="w-5 h-5" />
+                          <span>MESSAGES</span>
+                        </Link>
 
-                          <Link
-                            to="/requests"
-                            className="flex items-center space-x-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-pink-50 hover:to-rose-50 hover:text-pink-600 transition-all duration-200"
-                          >
-                            <UserPlus className="w-4 h-4" />
-                            <span>Connection Requests</span>
-                          </Link>
-                        </div>
+                        <Link
+                          to="/requests"
+                          className="flex items-center space-x-3 px-4 py-3 font-bold hover:bg-black hover:text-white transition-colors border-2 border-transparent hover:border-black"
+                        >
+                          <UserPlus className="w-5 h-5" />
+                          <span>REQUESTS</span>
+                        </Link>
+                      </div>
 
-                        <div className="border-t border-gray-100 py-1">
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center cursor-pointer space-x-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200"
-                          >
-                            <LogOut className="w-4 h-4" />
-                            <span>Logout</span>
-                          </button>
-                        </div>
+                      {/* Logout */}
+                      <div className="border-t-4 border-black p-2">
+                        <button
+                          onClick={handleLogout}
+                          className="cursor-pointer flex items-center justify-center space-x-2 w-full px-4 py-3 font-black bg-red-500 text-white border-2 border-black hover:bg-red-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
+                        >
+                          <LogOut className="w-5 h-5" />
+                          <span>LOGOUT</span>
+                        </button>
                       </div>
                     </div>
                   )}

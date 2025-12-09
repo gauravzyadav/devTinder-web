@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { addUser } from "../utils/userSlice";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BASE_URL } from "../utils/constants";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
 
 const Login = () => {
   const [emailId, setEmailId] = useState("");
@@ -20,7 +20,6 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Determine if we're on signup page based on route
   const isSignupForm = location.pathname === "/signup";
 
   const handleLogin = async () => {
@@ -29,54 +28,40 @@ const Login = () => {
     try {
       const res = await axios.post(
         BASE_URL + "/login",
-        {
-          emailId,
-          password,
-        },
+        { emailId, password },
         { withCredentials: true }
       );
-  
-      // 🔧 Store token in localStorage for cross-domain requests
+
       if (res.data.token) {
         localStorage.setItem("authToken", res.data.token);
       }
-  
-      // 🔧 Updated: Backend now returns { user, token, message }
-      dispatch(addUser(res.data.user)); // Use res.data.user instead of res.data
+
+      dispatch(addUser(res.data.user));
       return navigate("/feed");
     } catch (err) {
-      // 🔧 Better error handling for JSON responses
       setError(err?.response?.data?.message || err?.response?.data || "Something went wrong");
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   const handleSignUp = async () => {
     setError("");
     setIsLoading(true);
     try {
       const res = await axios.post(
         BASE_URL + "/signup",
-        {
-          firstName,
-          lastName,
-          emailId,
-          password,
-        },
+        { firstName, lastName, emailId, password },
         { withCredentials: true }
       );
-  
-      // 🔧 Store token in localStorage for cross-domain requests
+
       if (res.data.token) {
         localStorage.setItem("authToken", res.data.token);
       }
-  
-      // 🔧 Updated: Backend now returns { user, token, message }
-      dispatch(addUser(res.data.user)); // Use res.data.user instead of res.data.data
+
+      dispatch(addUser(res.data.user));
       return navigate("/profile");
     } catch (err) {
-      // 🔧 Better error handling for JSON responses
       setError(err?.response?.data?.message || err?.response?.data || "Something went wrong");
     } finally {
       setIsLoading(false);
@@ -84,150 +69,147 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 pt-20">
-      {/* Compact Login/Signup Card */}
-      <div className="w-full max-w-sm ">
-        <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl p-6">
-          {/* Compact Header */}
-          <div className="text-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-1">
-              {isSignupForm ? "Create Account" : "Welcome Back"}
+    <div className="min-h-screen flex items-center justify-center  bg-[#FFFDF5] font-sans selection:bg-pink-500 selection:text-white">
+      {/* Decorative Background Elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 left-20 w-32 h-32 bg-yellow-400 border-4 border-black rounded-full opacity-50"></div>
+        <div className="absolute bottom-20 right-20 w-40 h-40 bg-pink-400 border-4 border-black rotate-12 opacity-50"></div>
+      </div>
+
+      {/* Main Card */}
+      <div className="relative w-full max-w-md">
+        {/* Card Shadow Layer */}
+        <div className="absolute inset-0 bg-black translate-x-3 translate-y-3 border-4 border-black rounded-none"></div>
+        
+        <div className="relative bg-white border-4 border-black p-8 shadow-none">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-black text-black mb-2 uppercase tracking-tighter">
+              {isSignupForm ? "Join the Club" : "Welcome Back"}
             </h2>
-            <p className="text-gray-600 text-xs">
+            <p className="text-gray-600 font-bold border-b-4 border-yellow-300 inline-block px-1">
               {isSignupForm
-                ? "Join us to find your perfect match"
-                : "Sign in to continue"}
+                ? "Find your pair programming partner"
+                : "Login to push some code"}
             </p>
           </div>
 
-          {/* Compact Form */}
-          <div className="space-y-3">
-            {/* Name Fields for Signup */}
+          {/* Form */}
+          <div className="space-y-5">
             {isSignupForm && (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    First Name
-                  </label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">First Name</label>
                   <input
                     type="text"
                     value={firstName}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors bg-white/80"
-                    placeholder="Enter first name"
+                    className="w-full px-4 py-3 bg-white border-2 border-black focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all placeholder:text-gray-400 font-bold"
+                    placeholder="John"
                     onChange={(e) => setFirstName(e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Last Name
-                  </label>
+                  <label className="block text-sm font-black text-black mb-2 uppercase">Last Name</label>
                   <input
                     type="text"
                     value={lastName}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors bg-white/80"
-                    placeholder="Enter last name"
+                    className="w-full px-4 py-3 bg-white border-2 border-black focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all placeholder:text-gray-400 font-bold"
+                    placeholder="Doe"
                     onChange={(e) => setLastName(e.target.value)}
                   />
                 </div>
               </div>
             )}
 
-            {/* Email Field */}
+            {/* Email */}
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Email Address
-              </label>
+              <label className="block text-sm font-black text-black mb-2 uppercase">Email</label>
               <input
                 type="email"
-                placeholder="Enter your email address"
+                placeholder="dev@example.com"
                 value={emailId}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors bg-white/80"
+                className="w-full px-4 py-3 bg-white border-2 border-black focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all placeholder:text-gray-400 font-bold"
                 onChange={(e) => setEmailId(e.target.value)}
               />
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div className="relative">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Password
-              </label>
+              <label className="block text-sm font-black text-black mb-2 uppercase">Password</label>
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
-                placeholder="Enter your email password"
-                className="w-full px-3 py-2 pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 transition-colors bg-white/80"
+                placeholder="••••••••"
+                className="w-full px-4 py-3 pr-12 bg-white border-2 border-black focus:outline-none focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all placeholder:text-gray-400 font-bold"
                 onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-9 transform -translate-y-1/2 text-gray-500 hover:text-pink-500 cursor-pointer"
+                className="absolute right-4 top-10 text-black hover:text-pink-500 cursor-pointer transition-colors"
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
 
-            {/* Error Message */}
+            {/* Error Display */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs">
+              <div className="bg-red-100 border-2 border-black text-red-600 px-4 py-3 font-bold text-sm flex items-center gap-2">
+                <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
                 {error}
               </div>
             )}
 
             {/* Submit Button */}
             <button
-              className="w-full cursor-pointer bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              className="w-full cursor-pointer bg-pink-500 text-white font-black py-4 px-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all flex items-center justify-center gap-2 text-lg disabled:opacity-70 disabled:cursor-not-allowed uppercase"
               onClick={isSignupForm ? handleSignUp : handleLogin}
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-3  h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  {isSignupForm ? "Creating account..." : "Signing in..."}
-                </div>
+                <>
+                   <div className="w-5 h-5 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                   PROCESSING...
+                </>
               ) : (
-                <>{isSignupForm ? "Create Account" : "Sign In"}</>
+                <>
+                  {isSignupForm ? "Create Account" : "Sign In"} <ArrowRight className="w-6 h-6" />
+                </>
               )}
             </button>
 
-            {/* Toggle Form */}
-            <div className="text-center pt-2 text-xs text-gray-600 font-medium">
+            {/* Toggle Link */}
+            <div className="text-center pt-4 font-bold text-sm">
               {isSignupForm ? (
                 <>
-                  Have an account?{" "}
+                  Already a member?{" "}
                   <span
-                    className="text-pink-600 hover:underline cursor-pointer transition-colors duration-200"
-                    onClick={() => {
-                      navigate("/login");
-                      setError("");
-                    }}
+                    className="text-black bg-yellow-300 px-1 border border-black cursor-pointer hover:bg-yellow-400 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                    onClick={() => { navigate("/login"); setError(""); }}
                   >
-                    Log in
+                    LOGIN HERE
                   </span>
                 </>
               ) : (
                 <>
-                  Don't have an account?{" "}
+                  New here?{" "}
                   <span
-                    className="text-pink-600 hover:underline cursor-pointer transition-colors duration-200"
-                    onClick={() => {
-                      navigate("/signup");
-                      setError("");
-                    }}
+                    className="text-black bg-yellow-300 px-1 border border-black cursor-pointer hover:bg-yellow-400 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                    onClick={() => { navigate("/signup"); setError(""); }}
                   >
-                    Sign up
+                    CREATE ACCOUNT
                   </span>
                 </>
               )}
             </div>
           </div>
         </div>
-
-        {/* Compact Footer */}
-        <div className="text-center mt-4 text-xs text-white/70">
-          By continuing, you agree to our Terms & Privacy Policy
-        </div>
       </div>
+      
+      {/* Footer Text
+      <div className="fixed bottom-4 text-xs font-bold text-gray-400 text-center w-full pointer-events-none">
+        DEV_TINDER © {new Date().getFullYear()} • COMMIT EARLY • COMMIT OFTEN
+      </div> */}
     </div>
   );
 };

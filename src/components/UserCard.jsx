@@ -1,204 +1,152 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "./ui/button"
-import { Card, CardContent, CardFooter } from "./ui/card"
-import { Badge } from "./ui/badge"
-import { Heart, X, Calendar, FileText } from "lucide-react"
-
-// Your existing imports
 import axios from "axios"
 import { useDispatch } from "react-redux"
 import { BASE_URL } from "../utils/constants"
 import { removeUserFromFeed } from "../utils/feedSlice"
+import { Heart, X, Terminal } from "lucide-react"
 
-const UserCard = ({ user, isPreview = false }) => {
+const UserCard = ({ user }) => {
   const { _id, firstName, lastName, photoUrl, age, gender, about } = user
   const dispatch = useDispatch()
-  const [isLoading, setIsLoading] = useState(null)
+  const [matchStatus, setMatchStatus] = useState(null)
 
-  // State for like glow effect only
-  const [showLikeGlow, setShowLikeGlow] = useState(false)
+  // Check if we have an ID. If not, this is likely a preview in EditProfile.
+  const isPreview = !_id;
 
-  // 🔧 UPDATED: Enhanced handleSendRequest function with Authorization header
   const handleSendRequest = async (status, userId) => {
-    if (isPreview || isLoading) return // Prevent multiple clicks
+    // If it's a preview, don't do anything
+    if (isPreview) return;
 
-    // Only show glow for like action
-    if (status === "interested") {
-      setShowLikeGlow(true)
-    }
-
-    setIsLoading(status)
-
+    setMatchStatus(status)
     try {
-      // 🔧 Get token from localStorage
       const token = localStorage.getItem("authToken")
-
-      // Make API call with Authorization header
       await axios.post(
         BASE_URL + "/request/send/" + status + "/" + userId,
         {},
         {
-          headers: {
-            Authorization: `Bearer ${token}`, // 🔧 Add Authorization header
-          },
-          withCredentials: true, // Keep this for cookie fallback
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true,
         },
       )
+      
+      setTimeout(() => {
+         dispatch(removeUserFromFeed(userId))
+      }, 500)
 
-      // For like action, keep glow for 30 seconds before removing card
-      if (status === "interested") {
-        setTimeout(() => {
-          dispatch(removeUserFromFeed(userId))
-          setIsLoading(null)
-          setShowLikeGlow(false)
-        }, 200) // 30 seconds delay
-      } else {
-        // For pass action, remove immediately
-        dispatch(removeUserFromFeed(userId))
-        setIsLoading(null)
-      }
     } catch (err) {
       console.error("Error sending request:", err)
-
-      // 🔧 Handle 401 errors (token expired/invalid)
-      if (err.response?.status === 401) {
-        localStorage.removeItem("authToken")
-        // You might want to redirect to login or show a message
-        // window.location.href = "/login" // Uncomment if needed
-      }
-
-      // Reset states on error so user can try again
-      setIsLoading(null)
-      setShowLikeGlow(false)
+      setMatchStatus(null) 
     }
   }
 
-  const fullName = `${firstName} ${lastName}`.trim()
-  const displayInfo = age && gender ? `${age}, ${gender}` : age ? `${age}` : gender || ""
-
-  // Like glow class (only for like action)
-  const getLikeGlowClass = () => {
-    if (showLikeGlow) {
-      return "shadow-2xl shadow-pink-500/60 ring-4 ring-pink-400/40 scale-105"
-    }
+  // Animation Styles
+  const getCardStyle = () => {
+    if (matchStatus === "interested") return "translate-x-[150%] rotate-12 opacity-0"
+    if (matchStatus === "ignored") return "-translate-x-[150%] -rotate-12 opacity-0"
     return ""
   }
 
   return (
-    <Card
-      className={`w-full max-w-[280px] mx-auto overflow-hidden transition-all duration-300 border-0 shadow-md ${getLikeGlowClass()}`}
-    >
-      {/* Very Compact Profile Image Container */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
-        <img
-          src={photoUrl || "/placeholder.svg?height=280&width=224"}
-          alt={`${fullName}'s profile`}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.target.src = "/placeholder.svg?height=280&width=224"
-          }}
-        />
+    <div className={`relative group perspective-1000 w-full max-w-[290px] transition-all duration-500 ease-in-out ${getCardStyle()}`}>
+        
+      {/* BACKGROUND SHADOW */}
+      <div className={`absolute inset-0 bg-black translate-x-3 translate-y-3 rounded-none transition-opacity duration-300 ${matchStatus ? "opacity-0" : "opacity-100"}`}></div>
 
-        {/* Preview Badge */}
-        {isPreview && (
-          <div className="absolute top-2 right-2">
-            <Badge variant="secondary" className="bg-white/90 text-black shadow-sm text-xs px-1.5 py-0.5">
-              Preview
-            </Badge>
-          </div>
+      {/* MAIN CARD */}
+      <div className="relative bg-white border-4 border-black p-0">
+        
+        {/* STAMPS */}
+        {matchStatus === "interested" && (
+            <div className="absolute top-10 right-4 z-50 border-4 border-green-500 text-green-500 px-4 py-2 text-4xl font-black uppercase -rotate-12 bg-white/90 shadow-[4px_4px_0px_0px_#22c55e] animate-bounce">
+                LIKE
+            </div>
+        )}
+        {matchStatus === "ignored" && (
+            <div className="absolute top-10 left-4 z-50 border-4 border-red-500 text-red-500 px-4 py-2 text-4xl font-black uppercase rotate-12 bg-white/90 shadow-[4px_4px_0px_0px_#ef4444] animate-bounce">
+                NOPE
+            </div>
         )}
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-        {/* Very Compact Name and Age Overlay */}
-        <div className="absolute bottom-2 left-2 text-white">
-          <h3 className="text-lg font-bold mb-0.5 drop-shadow-sm">{fullName}</h3>
-          {displayInfo && (
-            <div className="flex items-center gap-1 text-xs opacity-90">
-              <Calendar className="h-3 w-3" />
-              <span className="drop-shadow-sm">{displayInfo}</span>
+        {/* HEADER BAR */}
+        <div className="bg-white border-b-4 border-black p-2 flex justify-between items-center">
+            <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500 border-2 border-black"></div>
+                <div className="w-3 h-3 rounded-full bg-yellow-400 border-2 border-black"></div>
+                <div className="w-3 h-3 rounded-full bg-green-500 border-2 border-black"></div>
             </div>
-          )}
+            <div className="font-mono text-[10px] font-bold">
+               {/* 🔧 FIX: Safely handle missing ID for Previews */}
+               ID: {isPreview ? "PREVIEW" : _id.slice(-4)}
+            </div>
         </div>
 
-        {/* Like glow overlay (only for like action) */}
-        {showLikeGlow && (
-          <div className="absolute inset-0 pointer-events-none transition-opacity duration-300 bg-gradient-to-t from-pink-500/20 via-transparent to-pink-500/10 animate-pulse" />
-        )}
-      </div>
+        {/* IMAGE SECTION */}
+        <div className="relative aspect-square w-full overflow-hidden border-b-4 border-black bg-gray-200 group">
+          <img
+            src={photoUrl || "/placeholder.svg?height=300&width=300"}
+            alt={`${firstName} ${lastName}`}
+            className="w-full h-full object-cover"
+          />
+          
+          {/* Name Tag */}
+          <div className="absolute bottom-3 left-3 bg-yellow-400 border-4 border-black px-2 py-0.5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+             <h2 className="text-lg font-black uppercase tracking-tighter">
+                {firstName || "Name"}, {age || "??"}
+             </h2>
+          </div>
+        </div>
 
-      {/* Very Compact Card Content */}
-      {about && (
-        <CardContent className="p-2">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1 text-xs font-medium text-gray-600">
-              <FileText className="h-3 w-3" />
-              About
+        {/* CONTENT SECTION */}
+        <div className="p-4">
+            <div className="flex flex-wrap gap-2 mb-3">
+                <span className="px-2 py-0.5 bg-blue-300 border-2 border-black font-bold text-[10px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                    {gender || "Gender"}
+                </span>
+                <span className="px-2 py-0.5 bg-purple-300 border-2 border-black font-bold text-[10px] uppercase shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] flex items-center gap-1">
+                    <Terminal size={12} /> Dev
+                </span>
             </div>
-            <p className="text-xs leading-relaxed text-gray-700 line-clamp-2">{about}</p>
-          </div>
-        </CardContent>
-      )}
 
-      {/* Very Compact Action Buttons */}
-      {!isPreview && (
-        <CardFooter className="p-2 pt-1">
-          <div className="flex gap-2 w-full">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors h-7 text-xs cursor-pointer disabled:cursor-not-allowed"
-              onClick={() => handleSendRequest("ignored", _id)}
-              disabled={isLoading !== null}
-            >
-              {isLoading === "ignored" ? (
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 border border-red-300 border-t-red-600 rounded-full animate-spin"></div>
-                  <span className="text-xs">Processing...</span>
-                </div>
-              ) : (
-                <>
-                  <X className="h-3 w-3 mr-1" />
-                  Pass
-                </>
-              )}
-            </Button>
-            <Button
-              size="sm"
-              className={`flex-1 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white border-0 transition-all duration-300 h-7 text-xs cursor-pointer disabled:cursor-not-allowed ${
-                showLikeGlow ? "shadow-lg shadow-pink-500/50 scale-105 animate-pulse" : ""
-              }`}
-              onClick={() => handleSendRequest("interested", _id)}
-              disabled={isLoading !== null}
-            >
-              {isLoading === "interested" ? (
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 border border-pink-200 border-t-white rounded-full animate-spin"></div>
-                  <span className="text-xs">Processing...</span>
-                </div>
-              ) : (
-                <>
-                  <Heart className="h-3 w-3 mr-1" />
-                  Like
-                </>
-              )}
-            </Button>
-          </div>
-        </CardFooter>
-      )}
+            <div className="mb-4 min-h-[40px]">
+                <p className="text-gray-800 text-xs font-medium leading-normal line-clamp-3">
+                    {about || "No bio provided."}
+                </p>
+            </div>
 
-      {/* Very Compact Preview Mode Footer */}
-      {isPreview && (
-        <CardFooter className="p-2 pt-1">
-          <div className="w-full text-center">
-            <p className="text-xs text-gray-500 italic">This is how your profile will appear to others</p>
-          </div>
-        </CardFooter>
-      )}
-    </Card>
+            {/* ACTION BUTTONS - HIDDEN IN PREVIEW */}
+            {!isPreview && (
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => handleSendRequest("ignored", _id)}
+                        disabled={matchStatus !== null}
+                        className="cursor-pointer flex-1 bg-white text-black border-4 border-black py-2 font-black text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-red-500 hover:text-white hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all flex justify-center items-center gap-1 uppercase disabled:opacity-50"
+                    >
+                        <X strokeWidth={4} className="w-4 h-4" /> 
+                        PASS
+                    </button>
+
+                    <button
+                        onClick={() => handleSendRequest("interested", _id)}
+                        disabled={matchStatus !== null}
+                        className="cursor-pointer flex-1 bg-pink-500 text-white border-4 border-black py-2 font-black text-sm shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-pink-600 hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all flex justify-center items-center gap-1 uppercase disabled:opacity-50"
+                    >
+                        <Heart strokeWidth={4} className="w-4 h-4 fill-current" /> 
+                        LIKE
+                    </button>
+                </div>
+            )}
+            
+            {/* PREVIEW FOOTER */}
+            {isPreview && (
+               <div className="text-center py-2 font-bold text-xs bg-gray-100 border-2 border-black border-dashed">
+                 PREVIEW MODE
+               </div>
+            )}
+        </div>
+      </div>
+    </div>
   )
 }
 

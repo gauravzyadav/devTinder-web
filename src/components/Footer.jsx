@@ -14,11 +14,18 @@ const Footer = () => {
           <div className="flex-1 text-center">
             <p className="text-black text-sm">
               Designed and Developed by{" "}
-              <span className="text-pink-500 font-semibold">Gaurav </span>
+              <a 
+                href="https://www.linkedin.com/in/gaurav-yadavvv/"
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-pink-500 font-semibold cursor-pointer hover:underline"
+              >
+                Gaurav 
+              </a>
             </p>
           </div>
 
-          {/* Right - Empty space */}
+          {/* Right - Empty space to balance the layout */}
           <div className="w-20" />
         </div>
       </div>
