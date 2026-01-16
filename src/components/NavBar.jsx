@@ -63,8 +63,8 @@ const NavBar = () => {
               to={logoDestination}
               className="text-3xl font-black tracking-tighter hover:text-pink-500 transition-colors flex items-center gap-1"
             >
-              <span className="bg-black text-white px-2 py-1 transform -rotate-3">DEV</span>
-              <span className="text-black">TINDER</span>
+              <span className="bg-black text-white px-2 py-1 transform -rotate-3">CODE</span>
+              <span className="text-black">MATE</span>
             </Link>
           </div>
 
