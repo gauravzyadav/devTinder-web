@@ -13,7 +13,7 @@ A modern, responsive React application for CodeMate featuring a bold Neo-Brutali
 
 ## 🔗 Related Repository
 
-**Backend Repository:** [CodeMate API](https://github.com/yourusername/devTinder) – Express.js backend with MongoDB & Socket.io
+**Backend Repository:** [CodeMate API](https://github.com/gauravzyadav/codeMate-backend) – Express.js backend with MongoDB & Socket.io
 
 ---
 
@@ -97,13 +97,13 @@ devTinder-web/
 ### Prerequisites
 
 - Node.js 18.x or higher
-- CodeMate Backend running (see [Backend Repository](https://github.com/yourusername/devTinder))
+- CodeMate Backend running (see [Backend Repository](https://github.com/gauravzyadav/codeMate-backend))
 
 ### Installation
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/yourusername/devTinder-web.git
+git clone https://github.com/gauravzyadav/codeMate-web.git
 cd devTinder-web
 ```
 
@@ -116,7 +116,6 @@ npm install
 
 The app automatically connects to:
 - **Development:** `http://localhost:3000`
-- **Production:** `https://devtinder-backend-yhxb.onrender.com`
 
 To change this, edit `src/utils/constants.js`:
 ```javascript
@@ -328,7 +327,7 @@ const compressImage = (file, maxWidth = 800, maxHeight = 800, quality = 0.8)
 
 The frontend is deployed on Vercel:
 ```
-https://dev-tinder-web-match-making.vercel.app
+https://dev-tinder-web-match-making.vercel.app/
 ```
 
 ### Deploy Your Own
